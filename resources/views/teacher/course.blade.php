@@ -84,6 +84,7 @@
                         <tr>
                             <th scope="row"><?php $i = $i+1; echo $i; ?></th>
                             <td>{{ key(json_decode($chapter->data,true)) }}
+                                <a type="button" style="float:right; padding:5px; margin-left:5px;" onclick="deleteChapter({{__($course)}}, {{__($chapter->id)}});" class="btn btn-danger">Delete</a>
                                 <a type="button" style="float:right; padding:5px; margin-left:5px;" href="/teacher/{{__($course)}}/chapter/{{__($chapter->id)}}/ViewAsStudent"  class="btn btn-warning">Attempt</a>
                                 <a type="button" style="float:right; padding:5px; margin-left:5px;" href="/teacher/{{__($course)}}/chapter/{{__($chapter->id)}}/listRR"  class="btn btn-info">Round Robin</a>
                                 <a type="button" style="float:right; padding:5px; margin-left:5px;" href="/teacher/{{__($course)}}/chapter/{{__($chapter->id)}}/summary"  class="btn btn-primary">Summary</a>
@@ -169,6 +170,14 @@
             </div>
         </div>
 </div>
+
+
+<!-- DeleteChapter -->
+<form hidden id="DeleteChapter"  action="{{ route('DeleteChapter') }}" method="post">
+@csrf
+    <input type='text' id="del_chap_courseId" name='courseId'>
+    <input type='text' id="del_chap_chapterId" name='chapterId'>
+</form>
 
 
 
@@ -344,6 +353,17 @@ form.addEventListener("submit", function(event){
             }
         });
         
+    }
+
+
+    function deleteChapter(courseId, chapId) {
+        
+        var r = confirm("Are you sure you want to Delete the Chapter ?");
+        if (r == true) {
+            document.getElementById("del_chap_courseId").value = courseId;
+            document.getElementById("del_chap_chapterId").value = chapId;
+            document.getElementById("DeleteChapter").submit();
+        }
     }
     </script>
 @endsection

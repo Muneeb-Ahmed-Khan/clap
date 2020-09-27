@@ -41,6 +41,7 @@ class StudentController extends Controller
         if($mapped_Course != null)
         {
             $chapters = DB::table('chapters')->get()->where('school_id',Auth::user()->school_id)->where('course_id',$mapped_Course);
+            
             if(!$chapters->isEmpty())
             {
                 #TODO : get brodcast for this course , if isActive ==1 then just show the broadcast else check the eligiblity of the test , if eligible then goto test else just give him the chapters
@@ -65,9 +66,10 @@ class StudentController extends Controller
                             {
                                 if(Auth::user()->id == intval($value))
                                 {
-                                    return redirect()->intended('/student/'.$request->route('courseId').'/TakeTest');
+                                    return redirect('/student/'.$request->route('courseId').'/TakeTest');
                                 }
                             }
+                            
                             //if he is not allowed to take test. just let him get inside simply , show him only chapters
                             return view('student.course')->with(['chapters'=>$chapters, 'course' => $request->route('courseId')]);
                         }
@@ -88,6 +90,7 @@ class StudentController extends Controller
 
     public function TakeTest(Request $request)
     {
+        
         $mapped_Course = $this->GetCourseIDofTeacher($request->route('courseId'));
 
         if($mapped_Course != null)
@@ -111,19 +114,52 @@ class StudentController extends Controller
                     }
                 }
                 //if he is not allowed to take test. just let him get inside simply , show him only chapters
-                return redirect()->intended('/student/'.$request->route('courseId'));
+                return redirect('/student/'.$request->route('courseId'));
             }
             else
             {   //if test is Empty : take him to course page
                 return redirect()->intended('/student')->withErrors(["WrongInput" => "Currently Test is Active. Please wait while it finishes"]);
             }
         }
+        
         return redirect('/student')->withErrors(["WrongInput" => "Some Error In Test"]);
     }
 
-    public function ViewAsStudent(Request $request)
+
+    //================================================
+    // SHOW CHAPTER Content
+    //================================================
+    public function Show_Chapter_Content(Request $request)
     {
-        #$school = DB::select("select school_id from students where id = ? ",[Auth::user()->id]);
+        $mapped_Course = $this->GetCourseIDofTeacher($request->route('courseId'));
+
+        $chap_rec = DB::table('chapters_record')->where(
+            [
+                'student_id'=>Auth::user()->id,
+                'course_id'=> $mapped_Course,
+                'chapter_id'=> (int)$request->route('chapterId'),
+                'school_id' => Auth::user()->school_id,
+            ]
+        )->get();
+
+        $chapters = DB::table('chapters')->get()->where('id',$request->route('chapterId'))->where('school_id',Auth::user()->school_id);
+        $cc = array();
+        $chap_id;
+        foreach($chapters as $chapter)
+        {
+            $d = json_decode($chapter->data,true);
+            $chap_id = $chapter->id;
+            array_push($cc,$d);
+        }
+        
+        return view('student.chapter')->with(['chapters'=>$cc, 'chapter_id'=>$chap_id]);
+    }
+
+    //================================================
+    // SHOW Round Robin Content
+    //================================================
+    public function Show_RR_Content(Request $request)
+    {
         $mapped_Course = $this->GetCourseIDofTeacher($request->route('courseId'));
 
         $chap_rec = DB::table('chapters_record')->where(
@@ -158,7 +194,8 @@ class StudentController extends Controller
                 'user_name' => Auth::user()->name,
                 ]);
         }
-        return view('student.chapter')->with(['chapters'=>$cc, 'chapter_id'=>$chap_id]);
+
+        return back()->withErrors(["WrongInput" => "Please attempt chapter short quiz first"]);
     }
 
     public function CheckQuiz(Request $request)
@@ -197,24 +234,10 @@ class StudentController extends Controller
         array_push($response["score"], $count);
         
         $json = json_encode($response,true);
-
-        // $check = DB::table('chapters_record')->insert(
-        //     ['chapterName' => $q[1]->chapterName,
-        //     'school_id' => $q[1]->school_id,
-        //     'student_id' => Auth::user()->id,
-        //     'course_id' => $q[1]->id,
-        //     'data' => $json]
-        // );
-
         
-        $check = DB::table('chapters_record')->updateOrInsert(
+        $check = DB::table('chapters_record')->insert(
             [
                 'chapter_id' => $chapId,
-                'school_id' => Auth::user()->school_id,
-                'course_id' => $mapped_Course,
-                'student_id' => Auth::user()->id
-            ],
-            [
                 'chapterName' => $q->all()[0]->chapterName,
                 'school_id' => Auth::user()->school_id,
                 'student_id' => Auth::user()->id,
@@ -442,5 +465,112 @@ class StudentController extends Controller
         {
             return "Error While Saving the Test";
         }
+    }
+
+
+
+
+    //================================================
+    // SUMMARY
+    //================================================
+    public function DetailedSummary(Request $request)
+    {
+        $courseid = $this->GetCourseIDofTeacher($request->route('courseId'));
+        $student_id =  Auth::user()->id;
+        
+        $tests = DB::table('test_record')->where([
+            'school_id' => Auth::user()->school_id,
+            'course_id'=> $courseid,
+            'student_id' => $student_id
+
+        ])->get();
+
+        $chapters = DB::table('chapters_record')->where([
+            'school_id' => Auth::user()->school_id,
+            'course_id'=> $courseid,
+            'student_id' => $student_id
+
+        ])->get();
+
+
+        $round_robin = DB::table('roundrobin_record')->select()->where([
+            'school_id' => Auth::user()->school_id,
+            'course_id'=> $courseid
+        ])->get();
+
+        #After getting all the roundrobins for this course, we are now filtering them based on the participants. if this participant exisits in the array, then keep the record, otherwise reject the record
+        $featured = $round_robin->filter(function($item, $key) use ($student_id){
+            
+            $pps =  json_decode($item->participants);
+            for($i = 0; $i < count($pps); $i++)
+            {
+                if($pps[$i][1] == $student_id)
+                {
+                    return true;
+                }
+            }
+            return false;
+         });
+
+        return view('student.viewProgress')->with(['tests' => $tests, 'chapters' => $chapters, 'roundRobins' => $featured, 'courseid' => $courseid, 'studentid' => $student_id]);
+    }
+
+
+
+    //=======================================
+    //   VIEW THE Round Robin RECORD
+    //=======================================
+
+    public function ViewRR(Request $request)
+    {
+        $chapters = DB::table('roundrobin_record')->where([
+            'school_id' => Auth::user()->school_id,
+            'course_id' => $request->route('courseId'),
+            'chapter_id' => $request->route('chapterId'),
+            'id' => $request->route('recordId'),
+        ])->get();
+        
+        if(!$chapters->isEmpty())
+        {
+            foreach ($chapters as $key => $value) {
+                $pps =  json_decode($value->participants);
+                if(is_countable($pps))
+                {
+                    for($i = 0; $i < count($pps); $i++)
+                    {
+                        if($pps[$i][1] == Auth::user()->id)
+                        {
+                            #Since the show pattern is same so we will just show it on Teacher Blade's templete
+                            return view('teacher.viewRR_Record')->with(['chapters'=>$chapters]);
+                        }
+                    }
+                }
+            }
+            return back()->withErrors(["WrongInput" => "Some Error In Record"]);
+        }
+        return back()->withErrors(["WrongInput" => "Some Error In Record"]);
+    }
+
+    //=======================================
+    //   VIEW THE Quiz Record
+    //=======================================
+    public function StudentViewQuiz(Request $request)
+    {
+        $courseid = (int)$request->route('courseId');
+        $test_record_Id = $request->route('chapter_record_Id');
+
+        $data = DB::table('chapters_record')->where([
+            'school_id' => Auth::user()->school_id,
+            'student_id' => Auth::user()->id,
+            'course_id'=> $courseid,
+            'id' => $test_record_Id
+        ])->get();
+        
+        if(!$data->isEmpty())
+        {
+            #Since the show pattern is same so we will just show it on Teacher Blade's templete
+            return view('teacher.viewSubmittedChapter')->with(['data' => $data]);
+        }
+        return back()->withErrors(["WrongInput" => "Some Error In Record"]);
     }
 }

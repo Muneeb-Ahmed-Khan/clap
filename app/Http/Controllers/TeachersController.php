@@ -164,6 +164,7 @@ class TeachersController extends Controller
 
                 'school_id' => Auth::user()->school_id,
                 'course_id' => (int)$request->route('courseId'),
+                'poster_name' => Auth::user()->name,
                 'data' => $request->input('data'),
                 'allowed' => '',
                 'isActive' => 0,
@@ -201,14 +202,38 @@ class TeachersController extends Controller
     {
         if($request->data != null)
         {
-            $active_test_disable = DB::table('tests')->where('school_id',Auth::user()->school_id)->where('course_id', (int)$request->route('courseId'))->update([
+            
+            #Disable the current Active test
+            $active_test_disable = DB::table('tests')
+            ->where([
+                'school_id' => Auth::user()->school_id,
+                'course_id' => (int)$request->route('courseId')
+            ])
+            ->update([
                 'allowed' => '',
                 'isActive' => 0
             ]);
 
-            $last_test = DB::table('tests')->select('id')->where('school_id',Auth::user()->school_id)->where('course_id', (int)$request->route('courseId'))->orderBy('id', 'DESC')->first();
             
-            $check = DB::table('tests')->where('id', $last_test->id)->where('school_id',Auth::user()->school_id)->where('course_id', (int)$request->route('courseId'))->update([
+            
+            #Get the last test ID
+            $last_test = DB::table('tests')->select('id')
+            ->where([
+                'school_id' => Auth::user()->school_id,
+                'course_id' => (int)$request->route('courseId')
+            ])
+            ->orderBy('id', 'DESC')->first();
+            
+            
+            
+            #Activate the Test
+            $check = DB::table('tests')
+            ->where([
+                'id' => $last_test->id,
+                'school_id' => Auth::user()->school_id,
+                'course_id' => (int)$request->route('courseId')
+            ])
+            ->update([
                 'allowed' => $request->data,
                 'isActive' => 1
             ]);
@@ -257,15 +282,60 @@ class TeachersController extends Controller
         }
         return "Failed";
     }
+    
+
+
+    //======================================================================
+    // View TEST to Teacher that was created by him.
+    //======================================================================
 
     public function viewTest(Request $request)
     {
-        $last_test = DB::table('tests')->where('school_id',Auth::user()->school_id)->where('course_id', (int)$request->route('courseId'))->orderBy('id', 'DESC')->first();
+        $last_test = DB::table('tests')
+        ->where('school_id', Auth::user()->school_id)
+        ->where('course_id', (int)$request->route('courseId'))
+        ->orderBy('id', 'DESC')->first();
+
         if($last_test != null)
         {
             return view('teacher.viewTest')->with('test',$last_test->data);
         }
         return redirect()->intended('/teacher')->withErrors(["WrongInput" => "Error in Test View."]);
+    }
+
+    public function ShowAllSharedTests(Request $request)
+    {
+        $shared_tests = DB::table('tests')->select()->where([
+            'school_id' => Auth::user()->school_id,
+            'course_id'=> (int)$request->route('courseId')
+        ])->get();
+
+        # After getting all the tests for this course, we are now filtering them based on the shared(column). 
+        # if this participant exisits in the array, then keep the record, otherwise reject the record
+        $teacher_id = Auth::user()->id;
+        $featured = $shared_tests->filter(function($item, $key) use ($teacher_id){
+            $pps = json_decode($item->shared);
+            if(is_countable($pps))
+            {
+                for($i = 0; $i < count($pps); $i++)
+                {
+                    if($pps[$i] == $teacher_id)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
+
+
+        $last_test = DB::table('tests')
+        ->where('school_id',Auth::user()->school_id)
+        ->where('course_id', (int)$request->route('courseId'))
+        ->orderBy('id', 'DESC')->first();
+        
+        
+        return view('teacher.viewAllTests')->with(['alltests' => $featured, 'mytests' => $last_test]);
     }
 
     //======================================================================
@@ -313,13 +383,17 @@ class TeachersController extends Controller
         $featured = $round_robin->filter(function($item, $key) use ($student_id){
             
             $pps =  json_decode($item->participants);
-            for($i = 0; $i < count($pps); $i++)
+            if(is_countable($pps))
             {
-                if($pps[$i][1] == $student_id)
+                for($i = 0; $i < count($pps); $i++)
                 {
-                    return true;
+                    if($pps[$i][1] == $student_id)
+                    {
+                        return true;
+                    }
                 }
             }
+           
             return false;
          });
 
@@ -358,8 +432,11 @@ class TeachersController extends Controller
             'id' => $test_record_Id
         ])->get();
         
-        #dd($data);
-        return view('teacher.viewSubmittedChapter')->with(['data' => $data]);
+        if(!$data->isEmpty())
+        {
+            return view('teacher.viewSubmittedChapter')->with(['data' => $data]);
+        }
+        return back()->withErrors(["WrongInput" => "Record Empty"]);
     }
 
 
@@ -397,6 +474,36 @@ class TeachersController extends Controller
     {
         return view('teacher.newchapter')->with('courseId',$request->route('courseId'));
     }
+
+    
+
+    //======================================================================
+    // DELETE An Exisiting Chapter
+    //======================================================================
+    public function DeleteChapter(Request $request)
+    {
+        $chapters = DB::table('chapters')->where([
+            'school_id' => Auth::user()->school_id,
+            'teacher_id' => Auth::user()->id,
+            'course_id' => $request->input('courseId'),
+            'id' => $request->input('chapterId')
+        ])->get();
+        
+        if(!$chapters->isEmpty())
+        {   
+            #Delete the chapter and all it's associated records
+            DB::table('chapters')->where('id', $request->input('chapterId'))->delete();
+            DB::table('chapters_record')->where('chapter_id', $request->input('chapterId'))->delete();
+            DB::table('roundrobin_record')->where('chapter_id', $request->input('chapterId'))->delete();
+
+            return back()->with('success', "Deleted Sucessfully");
+        }
+
+        return back()->withErrors(["WrongInput" => "Chapter does not Exists."]);
+    }
+
+
+
 
     //======================================================================
     // When Teacher Creates a Chapter and he wants to view hy
@@ -547,23 +654,7 @@ class TeachersController extends Controller
         return redirect('/teacher'.'/'.$request->route('courseId'))->withErrors(["SomethingWentWrong" => "Something went wrong"]);
     }
 
-    //=========================================
-    //  SHOW ALL THE ROUND ROBINS SUBMITTED
-    //=========================================
-
-    public function ListRR(Request $request)
-    {
-        $chapters = DB::table('roundrobin_record')->where([
-            'school_id' => Auth::user()->school_id,
-            'course_id' => $request->route('courseId'),
-            'chapter_id' => $request->route('chapterId')
-        ])->get();
-        
-        if(!$chapters->isEmpty())
-        {
-            return view('teacher.listRR')->with(['chapters'=>$chapters]);
-        }
-    }
+    
 
 
     //===========================================
@@ -756,6 +847,25 @@ class TeachersController extends Controller
 
 
 
+    //=========================================
+    //  SHOW ALL THE ROUND ROBINS SUBMITTED
+    //=========================================
+
+    public function ListRR(Request $request)
+    {
+        $chapters = DB::table('roundrobin_record')->where([
+            'school_id' => Auth::user()->school_id,
+            'course_id' => $request->route('courseId'),
+            'chapter_id' => $request->route('chapterId')
+        ])->get();
+        
+        if(!$chapters->isEmpty())
+        {
+            return view('teacher.listRR')->with(['chapters'=>$chapters]);
+        }
+        return back()->withErrors(["WrongInput" => "No Round Robin Exists."]);
+    }
+    
     //=======================================
     //   VIEW THE Round Robin RECORD
     //=======================================
@@ -773,5 +883,6 @@ class TeachersController extends Controller
         {
             return view('teacher.viewRR_Record')->with(['chapters'=>$chapters]);
         }
+        return back()->withErrors(["WrongInput" => "Record Empty"]);
     }
 }

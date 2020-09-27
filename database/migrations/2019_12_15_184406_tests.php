@@ -17,8 +17,10 @@ class Tests extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('school_id')->unsigned();
             $table->bigInteger('course_id')->unsigned();
+            $table->string('poster_name');
             $table->longText('data');
-            $table->longText('allowed');
+            $table->longText('allowed')->nullable();
+            $table->longText('shared')->nullable();
             $table->boolean('isActive')->default(0);
             $table->timestamps();
         });

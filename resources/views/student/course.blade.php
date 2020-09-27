@@ -57,6 +57,10 @@
 <div id="main" class="main-padding main-dashboard extend">
 
 
+    <div class="container">
+        <a type="button" style='margin-top: 5px;' href="/student/{{__($course)}}/summary" class="btn btn-primary">Summary</a>
+    </div>
+    <br>
 
     <div class="col-lg-custom">
         <div class="main-card mb-3 card">
@@ -75,6 +79,7 @@
                         <tr>
                             <th scope="row"><?php $i = $i+1; echo $i; ?></th>
                             <td>{{ key(json_decode($chapter->data,true)) }}
+                            <a type="button" style="float:right; padding:5px; margin-left:5px;" href="/student/{{__($course)}}/chapter/{{__($chapter->id)}}/viewRR"  class="btn btn-info">Round Robin</a>
                                 <a type="button" style="float:right; padding:5px; margin-left:5px;" href="/student/{{__($course)}}/chapter/{{__($chapter->id)}}/view"  class="btn btn-warning">Attempt</a>
                             </td>
                         </tr>

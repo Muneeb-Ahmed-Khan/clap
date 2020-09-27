@@ -75,14 +75,23 @@ Route::group(['middleware' => ['auth:student','verified']], function () {
     Route::get('/student','StudentController@Dashboard');
     Route::get('/student/{courseId}', 'StudentController@ManageCourse');
 
+    Route::get('/student/{courseId}/summary', 'StudentController@DetailedSummary');
+
     Route::get('/student/{courseId}/TakeTest', 'StudentController@TakeTest');
 
-    Route::get('/student/{courseId}/chapter/{chapterId}/view', 'StudentController@ViewAsStudent');
+    Route::get('/student/{courseId}/chapter/{chapterId}/view', 'StudentController@Show_Chapter_Content');
+    Route::get('/student/{courseId}/chapter/{chapterId}/viewRR', 'StudentController@Show_RR_Content');
+
     Route::post('/student/checkQuiz/{courseId}/{chapterId}', 'StudentController@CheckQuiz');
 
     Route::post('/student/{courseId}/submitTest', 'StudentController@CheckTest');
 
     Route::post('/student/{courseId}/{chapterId}/submitRR', 'StudentController@SubmitRR');
+
+    #View the Quiz and Round Robin at Chapter
+    Route::get('/student/{courseId}/{chapterId}/{recordId}/ViewRR', 'StudentController@ViewRR');
+    Route::get('/student/{courseId}/progress/{studentId}/viewChapterDetails/{chapter_record_Id}', 'StudentController@StudentViewQuiz');
+
 });
 
 /*Only teacher can use it. any authorized/unauthorized person that uses it will be redirected to Authenticate.php Middleware
@@ -92,6 +101,8 @@ Route::group(['middleware' => ['auth:teacher','verified']], function () {
     Route::get('/teacher', 'TeachersController@Dashboard');
     Route::get('/teacher/{courseId}', 'TeachersController@ManageCourse');
 
+    #DELETE CHAPTER
+    Route::post('/teacher/DeleteChapter', 'TeachersController@DeleteChapter')->name('DeleteChapter');
 
     Route::get('/teacher/{courseId}/summary', 'TeachersController@CourseSummary');
 
@@ -116,7 +127,10 @@ Route::group(['middleware' => ['auth:teacher','verified']], function () {
     Route::post('/teacher/checkAnswer/{chapterName}', 'TeachersController@CheckQuiz');
 
     Route::post('/teacher/{courseId}/stopTest', 'TeachersController@stopTest');
+    
     Route::get('/teacher/{courseId}/viewTest', 'TeachersController@viewTest');
+    #Route::get('/teacher/{courseId}/viewTests', 'TeachersController@ShowAllSharedTests');
+    
 
     Route::get('/teacher/{courseId}/progress', 'TeachersController@StudentProgress');
     Route::get('/teacher/{courseId}/progress/{studentId}', 'TeachersController@ShowFullProgress');
@@ -126,6 +140,8 @@ Route::group(['middleware' => ['auth:teacher','verified']], function () {
     Route::get('/teacher/{courseId}/progress/{studentId}/viewChapterDetails/{chapter_record_Id}', 'TeachersController@StudentViewQuiz');
 
     Route::post('/teacher/{courseId}/progress/{studentId}/changemarks', 'TeachersController@AssignMarks');
+
+    
 
 });
 
