@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Auth;
 use Auth;
 use App\Http\Controllers\Controller;
+use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
+use DB;
+
 class LoginController extends Controller
 {
     /*
@@ -49,16 +52,27 @@ class LoginController extends Controller
 
     protected function validator(array $data, $role)
     {
+        Validator::extend('Registered', function($attribute, $value, $parameters)
+        {
+            $aa = DB::table($parameters[0])->where([$parameters[1] => $value])->count();
+            if($aa>0){
+                return true;
+            }
+            else{
+                return false;
+            }
+        }, 'Email Not Registered');
+
         return Validator::make($data, [
-            'email'   => ['required','email',Rule::exists($role.'s')->where(function ($query) { $query->where('isActive', 1);})],
+            'email'   => ['required','email', 'Registered:'.$role.'s,email', Rule::exists($role.'s')->where(function ($query) { $query->where('isActive', 1);})],
             'password' => ['required','min:6'],
         ],
          [
             'email.exists' => 'Account not acctivated yet.',
-
             'password.required' => 'Password is required',
             'password.min' => 'Password must be at least 6 characters.',
-         ]);
+        ]);
+
     }
 
     public function LoginLogic(Request $request)

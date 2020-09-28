@@ -51,7 +51,7 @@ class PagesController extends Controller
     public function terms() {
         return view('terms');
     }
-    public function dashboard() {
-        return view('student.dashboard');
-    }
+    
+
+    
 }

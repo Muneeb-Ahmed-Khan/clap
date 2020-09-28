@@ -123,22 +123,22 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => 'password_resets',
-            'expire' => 60,
+            'expire' => 2,
         ],
         'students' => [
             'provider' => 'students',
-            'table' => 'password_resets',
-            'expire' => 60,
+            'table' => 'password_resets_students',
+            'expire' => 2,
         ],
         'teachers' => [
             'provider' => 'teachers',
-            'table' => 'password_resets',
-            'expire' => 60,
+            'table' => 'password_resets_teachers',
+            'expire' => 2,
         ],
         'principals' => [
             'provider' => 'principals',
-            'table' => 'password_resets',
-            'expire' => 60,
+            'table' => 'password_resets_principals',
+            'expire' => 2,
         ],
     ],
 

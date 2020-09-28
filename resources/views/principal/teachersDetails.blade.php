@@ -48,15 +48,14 @@
 </style>
 <div id="main" class="main-padding main-dashboard extend">
     <div class="container">
-        <button type="button" style='margin-top: 5px;' data-target="#changeTeacher" data-toggle="modal" class="btn btn-primary">Change Teacher</button>
-        <button type="button"  style='margin-top: 5px;' onclick="deleteCourse({{ $courseId }});" class="btn btn-danger">Delete Course</button>
+        <button type="button" style='margin-top: 5px;' data-target="#addTeacher" data-toggle="modal" class="btn btn-primary">Add Teacher</button>
     </div>
 <br>
     <center>
     <div class="col-lg-custom">
         <div class="main-card mb-3 card">
             <div class="card-body">
-                {{-- <h6 class="card-title">Student's Table</h6> --}}
+                
                 <table class="mb-0 table">
                     <thead>
                         <tr>
@@ -67,12 +66,12 @@
                     </thead>
                     <tbody>
                         <?php $i = 0; ?>
-                        @foreach($students as $student)
+                        @foreach($teachers as $teacher)
                             <tr>
                                 <th scope="row"><?php $i = $i+1; echo $i; ?></th>
-                                <td>{{ $student->name }}</td>
-                                <td>{{ $student->email }}
-                                    <a type="button" onclick="RemoveStudentFromCourse({{ $student->id }}, {{ $courseId }});" style="float:right; padding:5px; margin-left:5px;" class="btn btn-primary">Remove</a>
+                                <td>{{ $teacher->name }}</td>
+                                <td>{{ $teacher->email }}
+                                    <a type="button" onclick="deleteTeacher({{ $teacher->id }}, {{ $teacher->school_id }});" style="float:right; padding:5px; margin-left:5px;" class="btn btn-danger">Delete</a>
                                 </td>
                                 
                             </tr>
@@ -85,8 +84,9 @@
     </center>
 
 
-<!--  Register Popup      -->
-<div class="modal fade modal-cuz" id="changeTeacher" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+<!--  AddTeacher  -->
+<div class="modal fade modal-cuz" id="addTeacher" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -95,17 +95,22 @@
                 </div>
                 <div class="modal-body">
 
-                    <form class="sp-form" id="login-form-1" method="post" action="{{ route('changeTeacher') }}" enctype="multipart/form-data">
+                    <form class="sp-form" id="login-form-1" method="post" action="{{ route('addTeacher') }}">
                         @csrf
                         
-                        <select class="form-control" name="teacherId">
-                            @foreach($teachers as $t)
-                                <option value="{{ $t->id }}">{{ $t->name }}</option>
-                            @endforeach
-                        </select>
-                        <input type="text" name="courseId" value="{{ $courseId }}" hidden/>
+                        <div class="form-group">
+                            <label for="usr">Name:</label>
+                            <input type="text" class="form-control" name="name">
+                        </div>
 
-                        <button id="login-submit" name="SubmitedForm_ChangeTeacher" type="submit" class="btn btn-success btn-block mt20" style="background: #3b8de3 !important;">Change Teacher
+                        <div class="form-group">
+                            <label for="usr">Email:</label>
+                            <input type="text" class="form-control" name="email">
+                        </div>
+
+                        <input type="text" name="schoolId" value="{{ $schoolId }}" hidden/>
+
+                        <button id="login-submit" name="SubmitedForm_AddTeacher" type="submit" class="btn btn-success btn-block mt20" style="background: #3b8de3 !important;">Add Teacher
                         </button>
                     </form>
                 </div>
@@ -115,36 +120,22 @@
 
 
 
-<!-- Remove student from course -->
-<form hidden id="RemoveStudent"  action="{{ route('removeStudentFromCourse') }}" method="post">
-@csrf
-    <input type='text' id="rem_stud_studentId" name='studentId'>
-    <input type='text' id="rem_stud_courseId" name='courseId'>
-</form>
 
-<!-- DeleteCourse -->
-<form hidden id="DeleteCourse"  action="{{ route('DeleteCourse') }}" method="post">
+<!-- DeleteChapter -->
+<form hidden id="DeleteTeacher"  action="{{ route('DeleteTeacher') }}" method="post">
 @csrf
-    <input type='text' id="del_course_courseId" name='courseId'>
+    <input type='text' id="del_stud_studentId" name='teacherId'>
+    <input type='text' id="del_stud_schoolId" name='schoolId'>
 </form>
 
 <script>
-    function RemoveStudentFromCourse(studentId, courseId) {
+    function deleteTeacher(studentId, schoolId) {
         
-        var r = confirm("Are you sure you want to remove this student from this course ?");
+        var r = confirm("Are you sure you want to Delete this Teacher ?");
         if (r == true) {
-            document.getElementById("rem_stud_studentId").value = studentId;
-            document.getElementById("rem_stud_courseId").value = courseId;
-            document.getElementById("RemoveStudent").submit();
-        }
-    }
-
-    function deleteCourse(courseId) {
-        
-        var r = confirm("Are you sure you want to Delete this Course ?");
-        if (r == true) {
-            document.getElementById("del_course_courseId").value = courseId;
-            document.getElementById("DeleteCourse").submit();
+            document.getElementById("del_stud_studentId").value = studentId;
+            document.getElementById("del_stud_schoolId").value = schoolId;
+            document.getElementById("DeleteTeacher").submit();
         }
     }
 </script>

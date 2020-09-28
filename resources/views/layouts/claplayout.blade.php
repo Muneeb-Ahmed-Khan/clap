@@ -104,35 +104,7 @@
                     <div class="block text-center md-logo"><img src="/images/logo-minimize.png" class="logo-bw"></div>
                     <form class="sp-form" id="login-form-1" method="post" action="{{ url('login') }}">
                         @csrf
-                        @if($errors)
-                        <script type="text/javascript" src="{{asset('/js/toastr.js')}}"></script>
-                        <script>
-                        toastr.options = {
-                            "closeButton": true,
-                            "debug": false,
-                            "newestOnTop": false,
-                            "progressBar": false,
-                            "positionClass": "toast-top-center",
-                            "preventDuplicates": false,
-                            "onclick": null,
-                            "showDuration": "300",
-                            "hideDuration": "1000",
-                            "timeOut": "5000",
-                            "extendedTimeOut": "1000",
-                            "showEasing": "swing",
-                            "hideEasing": "linear",
-                            "showMethod": "fadeIn",
-                            "hideMethod": "fadeOut"
-                            }
-                        </script>
-                        @foreach ($errors->all() as $error)
-                            <script>
-                            Command: toastr["error"]("{{$error}}");
-                            </script>
-                        @endforeach
-                        @endif
-
-
+                        
                         @if ($errors->has('invalid'))
                             <div style="display: block;" id="error-message" class="alert alert-danger">{{ $errors->first('invalid') }}</div>
                         @else
@@ -192,4 +164,49 @@
             @yield('landingpagecontent_rotateJQurey')
     </main>
 </body>
+
+<script type="text/javascript" src="{{asset('/js/toastr.js')}}"></script>
+<script>
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": false,
+        "positionClass": "toast-top-center",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+        }
+</script>
+
+
+@if(!empty($errors))
+
+    @foreach ($errors->all() as $error)
+        <script>
+            Command: toastr["error"]("{{$error}}");
+        </script>
+    @endforeach
+@endif
+
+
+@if(session()->has('success'))
+    <script>
+        Command: toastr["success"]("{{__(session('success'))}}");
+    </script>
+@endif
+
+@if(session()->has('info'))
+    <script>
+        Command: toastr["info"]("{{__(session('info'))}}");
+    </script>
+@endif
+
 </html>

@@ -97,8 +97,19 @@ class StudentController extends Controller
         {
             
             //get the active test where(isActive, 1);
-            $test = DB::table('tests')->where('school_id',Auth::user()->school_id)->where('course_id',$mapped_Course)->where('isActive', 1)->get();
-            $test_record = DB::table('test_record')->where('school_id',Auth::user()->school_id)->where('course_id',$mapped_Course)->where('test_id', $test[0]->id)->get();
+            $test = DB::table('tests')->where([
+                'school_id' => Auth::user()->school_id,
+                'course_id' => $mapped_Course,
+                'isActive' => 1
+            ])->get();
+
+            $test_record = DB::table('test_record')->where([
+                'school_id' => Auth::user()->school_id,
+                'course_id' => $mapped_Course,
+                'test_id' => $test[0]->id,
+                'student_id' => Auth::user()->id
+            ])->get();
+
             if(!$test->isEmpty() && $test_record->isEmpty()) //if there is test and i have already not taken it.
             {
                 // check if i am Allowed to take test
@@ -118,7 +129,7 @@ class StudentController extends Controller
             }
             else
             {   //if test is Empty : take him to course page
-                return redirect()->intended('/student')->withErrors(["WrongInput" => "Currently Test is Active. Please wait while it finishes"]);
+                return redirect('/student')->withErrors(["WrongInput" => "Currently Test is Active. Please wait while it finishes"]);
             }
         }
         
@@ -573,4 +584,7 @@ class StudentController extends Controller
         }
         return back()->withErrors(["WrongInput" => "Some Error In Record"]);
     }
+
+
+
 }

@@ -885,4 +885,7 @@ class TeachersController extends Controller
         }
         return back()->withErrors(["WrongInput" => "Record Empty"]);
     }
+
+    
+
 }

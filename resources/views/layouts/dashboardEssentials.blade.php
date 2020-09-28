@@ -40,7 +40,6 @@
         <div class="header-welcome m-none active"><a href="/">Hi, {{ Auth::user()->name }} !</a></div>
         <div class="header-display">
 
-
             <div class="hd-logout">
 
                     <a href="/settings" title="User setting">

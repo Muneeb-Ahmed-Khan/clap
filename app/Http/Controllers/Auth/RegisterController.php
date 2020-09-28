@@ -73,6 +73,7 @@ class RegisterController extends Controller
             'password.min' => 'Password must be at least 6 characters.',
             'password.confirmed' => 'Password must be same',
          ]);
+        
     }
 
 
@@ -80,40 +81,20 @@ class RegisterController extends Controller
     {
 
         $role = $request->input('role');
-        if($role=="student" || $role=="teacher" || $role=="principal")
+        if($role=="principal")
         {
-            $validator = $this->validator($request->all(),  $role.'s');  //Second Parameter is TableName we sent to Validator
+            $validator = $this->validator($request->all(), 'principals');  //Second Parameter is TableName we sent to Validator
             if ($validator->fails())
             {
                 return back()->withInput($request->only('email', 'name'))->withErrors($validator);
             }
             else
             {
-                $model;
-                if($role=="student")
-                {
-                    $model = Student::create([
-                        'name' => $request['name'],
-                        'email' => $request['email'],
-                        'password' => Hash::make($request['password']),
-                    ]);
-                }
-                elseif($role=="teacher")
-                {
-                    $model = Teacher::create([
-                        'name' => $request['name'],
-                        'email' => $request['email'],
-                        'password' => Hash::make($request['password']),
-                    ]);
-                }
-                elseif($role=="principal")
-                {
-                    $model = Principal::create([
-                        'name' => $request['name'],
-                        'email' => $request['email'],
-                        'password' => Hash::make($request['password']),
-                    ]);
-                }
+                $model = Principal::create([
+                    'name' => $request['name'],
+                    'email' => $request['email'],
+                    'password' => Hash::make($request['password']),
+                ]);
 
                 /*
                         in this case i have 3 tables in which i create instances according to the roles.
@@ -148,9 +129,11 @@ class RegisterController extends Controller
                 */
 
                 $model->sendEmailVerificationNotification();
-                return redirect()->intended('/register')->withErrors(["success" => "Check your inbox for Verification Email"]);
+                return back()->with('success', "Check your inbox for Verification Email");
             }
         }
+
+        return back()->withErrors(["WrongInput" => "Only Principal Registration Allowed at the moment."]);
     }
 
     protected function showRegisterForm()

@@ -48,8 +48,7 @@
 </style>
 <div id="main" class="main-padding main-dashboard extend">
     <div class="container">
-        <button type="button" style='margin-top: 5px;' data-target="#changeTeacher" data-toggle="modal" class="btn btn-primary">Change Teacher</button>
-        <button type="button"  style='margin-top: 5px;' onclick="deleteCourse({{ $courseId }});" class="btn btn-danger">Delete Course</button>
+        <button type="button" style='margin-top: 5px;' data-target="#addStudent" data-toggle="modal" class="btn btn-primary">Add Student</button>
     </div>
 <br>
     <center>
@@ -72,7 +71,8 @@
                                 <th scope="row"><?php $i = $i+1; echo $i; ?></th>
                                 <td>{{ $student->name }}</td>
                                 <td>{{ $student->email }}
-                                    <a type="button" onclick="RemoveStudentFromCourse({{ $student->id }}, {{ $courseId }});" style="float:right; padding:5px; margin-left:5px;" class="btn btn-primary">Remove</a>
+                                    <a type="button" data-target="#assignCourseModal" onclick="document.getElementById('std_ID').value= {{ $student->id }};" data-toggle="modal" style="float:right; padding:5px; margin-left:5px;" class="btn btn-primary">Assign Course</a>
+                                    <a type="button" onclick="deleteStudent({{ $student->id }}, {{ $student->school_id }});" style="float:right; padding:5px; margin-left:5px;" class="btn btn-danger">Delete</a>
                                 </td>
                                 
                             </tr>
@@ -84,9 +84,8 @@
     </div>
     </center>
 
-
-<!--  Register Popup      -->
-<div class="modal fade modal-cuz" id="changeTeacher" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<!--  Assign course      -->
+<div class="modal fade modal-cuz" id="assignCourseModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -95,17 +94,51 @@
                 </div>
                 <div class="modal-body">
 
-                    <form class="sp-form" id="login-form-1" method="post" action="{{ route('changeTeacher') }}" enctype="multipart/form-data">
+                    <form class="sp-form" id="login-form-1" method="post" action="{{ route('assignCourse') }}">
                         @csrf
                         
-                        <select class="form-control" name="teacherId">
-                            @foreach($teachers as $t)
-                                <option value="{{ $t->id }}">{{ $t->name }}</option>
+                        <select class="form-control" name="courseId">
+                            @foreach($courses as $c)
+                                <option value="{{ $c->id }}">{{ $c->cname }}</option>
                             @endforeach
                         </select>
-                        <input type="text" name="courseId" value="{{ $courseId }}" hidden/>
+                        <input type="text" id="std_ID" name="studentId" hidden/>
 
-                        <button id="login-submit" name="SubmitedForm_ChangeTeacher" type="submit" class="btn btn-success btn-block mt20" style="background: #3b8de3 !important;">Change Teacher
+                        <button id="login-submit" name="SubmitedForm_AddCoursetoStudent" type="submit" class="btn btn-success btn-block mt20" style="background: #3b8de3 !important;">Assign Course
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+</div>
+
+
+<!--  Add Student      -->
+<div class="modal fade modal-cuz" id="addStudent" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <form class="sp-form" id="login-form-1" method="post" action="{{ route('addStudent') }}">
+                        @csrf
+                        
+                        <div class="form-group">
+                            <label for="usr">Name:</label>
+                            <input type="text" class="form-control" name="name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="usr">Email:</label>
+                            <input type="text" class="form-control" name="email">
+                        </div>
+
+                        <input type="text" name="schoolId" value="{{ $schoolId }}" hidden/>
+
+                        <button id="login-submit" name="SubmitedForm_AddStudent" type="submit" class="btn btn-success btn-block mt20" style="background: #3b8de3 !important;">Add Student
                         </button>
                     </form>
                 </div>
@@ -115,36 +148,22 @@
 
 
 
-<!-- Remove student from course -->
-<form hidden id="RemoveStudent"  action="{{ route('removeStudentFromCourse') }}" method="post">
-@csrf
-    <input type='text' id="rem_stud_studentId" name='studentId'>
-    <input type='text' id="rem_stud_courseId" name='courseId'>
-</form>
 
-<!-- DeleteCourse -->
-<form hidden id="DeleteCourse"  action="{{ route('DeleteCourse') }}" method="post">
+<!-- DeleteChapter -->
+<form hidden id="DeleteStudent"  action="{{ route('DeleteStudent') }}" method="post">
 @csrf
-    <input type='text' id="del_course_courseId" name='courseId'>
+    <input type='text' id="del_stud_studentId" name='studentId'>
+    <input type='text' id="del_stud_schoolId" name='schoolId'>
 </form>
 
 <script>
-    function RemoveStudentFromCourse(studentId, courseId) {
+    function deleteStudent(studentId, schoolId) {
         
-        var r = confirm("Are you sure you want to remove this student from this course ?");
+        var r = confirm("Are you sure you want to Delete this student ?");
         if (r == true) {
-            document.getElementById("rem_stud_studentId").value = studentId;
-            document.getElementById("rem_stud_courseId").value = courseId;
-            document.getElementById("RemoveStudent").submit();
-        }
-    }
-
-    function deleteCourse(courseId) {
-        
-        var r = confirm("Are you sure you want to Delete this Course ?");
-        if (r == true) {
-            document.getElementById("del_course_courseId").value = courseId;
-            document.getElementById("DeleteCourse").submit();
+            document.getElementById("del_stud_studentId").value = studentId;
+            document.getElementById("del_stud_schoolId").value = schoolId;
+            document.getElementById("DeleteStudent").submit();
         }
     }
 </script>

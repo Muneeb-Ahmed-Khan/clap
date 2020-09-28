@@ -21,6 +21,12 @@ Route::get('/faq', 'PagesController@faq');
 Route::get('/register', 'PagesController@register');
 Route::get('/terms', 'PagesController@terms');
 
+
+/*Settings  Routes */
+Route::get('/settings', 'HomeController@MyAccount')->middleware('auth:teacher,student,principal');
+Route::post('/settings', 'HomeController@ManageMyAccount')->middleware('auth:teacher,student,principal');
+
+
 Route::namespace('Auth')->group(function(){
 
     /* Reset Password Routes */
@@ -47,6 +53,8 @@ Route::namespace('Auth')->group(function(){
 
     /*LOGOUT  Routes */
     Route::post('/logout','LoginController@logout');
+
+    
 });
 
 
@@ -74,29 +82,25 @@ Route::group(['middleware' => ['auth:student','verified']], function () {
 
     Route::get('/student','StudentController@Dashboard');
     Route::get('/student/{courseId}', 'StudentController@ManageCourse');
-
     Route::get('/student/{courseId}/summary', 'StudentController@DetailedSummary');
-
     Route::get('/student/{courseId}/TakeTest', 'StudentController@TakeTest');
-
     Route::get('/student/{courseId}/chapter/{chapterId}/view', 'StudentController@Show_Chapter_Content');
     Route::get('/student/{courseId}/chapter/{chapterId}/viewRR', 'StudentController@Show_RR_Content');
-
-    Route::post('/student/checkQuiz/{courseId}/{chapterId}', 'StudentController@CheckQuiz');
-
-    Route::post('/student/{courseId}/submitTest', 'StudentController@CheckTest');
-
-    Route::post('/student/{courseId}/{chapterId}/submitRR', 'StudentController@SubmitRR');
-
     #View the Quiz and Round Robin at Chapter
     Route::get('/student/{courseId}/{chapterId}/{recordId}/ViewRR', 'StudentController@ViewRR');
     Route::get('/student/{courseId}/progress/{studentId}/viewChapterDetails/{chapter_record_Id}', 'StudentController@StudentViewQuiz');
+
+    
+    Route::post('/student/{courseId}/submitTest', 'StudentController@CheckTest');
+    Route::post('/student/checkQuiz/{courseId}/{chapterId}', 'StudentController@CheckQuiz');
+    Route::post('/student/{courseId}/{chapterId}/submitRR', 'StudentController@SubmitRR');
 
 });
 
 /*Only teacher can use it. any authorized/unauthorized person that uses it will be redirected to Authenticate.php Middleware
 and it will return it to the ReturnToUnauthorizedPage route and that will redirect it accoring to it's gurad */
 Route::group(['middleware' => ['auth:teacher','verified']], function () {
+
 
     Route::get('/teacher', 'TeachersController@Dashboard');
     Route::get('/teacher/{courseId}', 'TeachersController@ManageCourse');
@@ -152,12 +156,23 @@ and it will return it to the ReturnToUnauthorizedPage route and that will redire
 Route::group(['middleware' => ['auth:principal','verified']], function () {
 
     Route::get('/principal', 'PrincipalController@Dashboard');
-    Route::post('/principal','PrincipalController@ManageSchool')->name('ManageSchool');
-
     Route::get('/principal/{schoolId}', 'PrincipalController@SchoolView');
-    Route::post('/principal/{schoolId}', 'PrincipalController@ManageUpload')->name('ManageUpload');
+    Route::get('/principal/{schoolId}/viewStudents', 'PrincipalController@ViewAllStudents');
+    Route::get('/principal/{schoolId}/viewTeachers', 'PrincipalController@ViewAllTeachers');
+    Route::get('/principal/{schoolId}/courses/{courseId}', 'PrincipalController@ShowSubjectParticipants')->name('ManageSubjects');
+    
 
-    Route::get('/principal/{schoolId}/courses/{courseId}', 'PrincipalController@ManageSubjects')->name('ManageSubjects');
+    Route::post('/principal','PrincipalController@ManageSchool')->name('ManageSchool');
+    Route::post('/principal/addStudent', 'PrincipalController@AddStudent')->name('addStudent'); #ADD Student
+    Route::post('/principal/assignCourse', 'PrincipalController@AssignCourseToStudent')->name('assignCourse'); #Assign course to Student
+    Route::post('/principal/removeStudentFromCourse', 'PrincipalController@RemoveStudentFromCourse')->name('removeStudentFromCourse'); #Remove Student from course
+    Route::post('/principal/DeleteStudent', 'PrincipalController@DeleteStudent')->name('DeleteStudent'); #Delete Student
+    Route::post('/principal/addTeacher', 'PrincipalController@AddTeacher')->name('addTeacher'); #ADD Teacher
+    Route::post('/principal/DeleteTeacher', 'PrincipalController@DeleteTeacher')->name('DeleteTeacher'); #Delete Teacher
+    Route::post('/principal/changeTeacher', 'PrincipalController@ChangeTeacher')->name('changeTeacher'); #change Teacher
+    Route::post('/principal/deleteCourse', 'PrincipalController@DeleteCourse')->name('DeleteCourse'); #DeleteCourse
+    Route::post('/principal/{schoolId}', 'PrincipalController@ManageUpload')->name('ManageUpload');
+    
 });
 
 

@@ -4,6 +4,7 @@
 <div class="container">
   <button type="button" style='margin-top: 5px;' data-target="#pop-login" data-toggle="modal" class="btn btn-primary">Add School</button>
   <button type="button" style='margin-top: 5px;' data-target="#pop-logout" data-toggle="modal" class="btn btn-danger">Delete School</button>
+  
 </div>
 <br>
     <div class="main-content">
@@ -34,80 +35,7 @@
     </div>
 </div>
 
-@if(!empty($errors))
-<script type="text/javascript" src="{{asset('/js/toastr.js')}}"></script>
-@foreach ($errors->all() as $error)
-    <script>
-toastr.options = {
-    "closeButton": true,
-    "debug": false,
-    "newestOnTop": false,
-    "progressBar": false,
-    "positionClass": "toast-top-center",
-    "preventDuplicates": false,
-    "onclick": null,
-    "showDuration": "300",
-    "hideDuration": "1000",
-    "timeOut": "5000",
-    "extendedTimeOut": "1000",
-    "showEasing": "swing",
-    "hideEasing": "linear",
-    "showMethod": "fadeIn",
-    "hideMethod": "fadeOut"
-    }
-    Command: toastr["error"]("{{$error}}");
-    </script>
-@endforeach
-@endif
 
-
-@if(session()->has('success'))
-<script type="text/javascript" src="{{asset('/js/toastr.js')}}"></script>
-<script>
-toastr.options = {
-    "closeButton": true,
-    "debug": false,
-    "newestOnTop": false,
-    "progressBar": false,
-    "positionClass": "toast-top-center",
-    "preventDuplicates": false,
-    "onclick": null,
-    "showDuration": "300",
-    "hideDuration": "1000",
-    "timeOut": "5000",
-    "extendedTimeOut": "1000",
-    "showEasing": "swing",
-    "hideEasing": "linear",
-    "showMethod": "fadeIn",
-    "hideMethod": "fadeOut"
-    }
-    Command: toastr["success"]("{{__(session('success'))}}");
-</script>
-@endif
-
-@if(session()->has('info'))
-<script type="text/javascript" src="{{asset('/js/toastr.js')}}"></script>
-<script>
-toastr.options = {
-    "closeButton": true,
-    "debug": false,
-    "newestOnTop": false,
-    "progressBar": false,
-    "positionClass": "toast-top-center",
-    "preventDuplicates": false,
-    "onclick": null,
-    "showDuration": "300",
-    "hideDuration": "1000",
-    "timeOut": "5000",
-    "extendedTimeOut": "1000",
-    "showEasing": "swing",
-    "hideEasing": "linear",
-    "showMethod": "fadeIn",
-    "hideMethod": "fadeOut"
-    }
-    Command: toastr["info"]("{{__(session('info'))}}");
-</script>
-@endif
 
 <!--  Register Popup      -->
 <div class="modal fade modal-cuz" id="pop-login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -181,4 +109,52 @@ toastr.options = {
             </div>
         </div>
     </div>
+
+
+
+    <script type="text/javascript" src="{{asset('/js/toastr.js')}}"></script>
+<script>
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": false,
+        "positionClass": "toast-top-center",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+        }
+</script>
+
+
+@if(!empty($errors))
+
+    @foreach ($errors->all() as $error)
+        <script>
+            Command: toastr["error"]("{{$error}}");
+        </script>
+    @endforeach
+@endif
+
+
+@if(session()->has('success'))
+    <script>
+        Command: toastr["success"]("{{__(session('success'))}}");
+    </script>
+@endif
+
+@if(session()->has('info'))
+    <script>
+        Command: toastr["info"]("{{__(session('info'))}}");
+    </script>
+@endif
+
+
 @endsection
